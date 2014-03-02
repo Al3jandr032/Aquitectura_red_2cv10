@@ -1,5 +1,5 @@
 #include <iostream>
-#include <string>         // std::string
+#include <string>       
 #include <bitset>
 #include "protocolo.h"
 using namespace std;
@@ -11,8 +11,12 @@ int main(int argc, char *argv[]) {
 	/*
 	Armar la trama instanciando el tipo de trama a enviar y  configurandola
 	*/
-	Solicitud Rqe(1,"ar");
-	
+	char trama[100];
+	char nombre[15]="hola";
+	Solicitud Rqe(1,nombre);
+	trama[0]=Rqe.getTipo();
+	//trama[1]=Rqe.getName();
+	cout << trama << '\n';
 	
 	return 0;
 }

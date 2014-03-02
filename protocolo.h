@@ -1,12 +1,13 @@
 #include <iostream>
 #include <cstring>
-
 using namespace std;
 class Solicitud
 {
+	private:
+		char tipo;
+		char* nombre;
 	public:
-		Solicitud(int tipo,const char* name){
-		
+		Solicitud(int tipo,const char name[]){
 			if(tipo == 1){
 				this->tipo = 0x01;
 				strcpy(this->nombre, name);
@@ -18,9 +19,13 @@ class Solicitud
 		char getTipo(){
 			return this->tipo;
 		}
-	private:
-		char tipo;
-		char* nombre;
+		char* getName(){
+			return this->nombre;
+		}
+		void imprimir(){
+			cout<< hex<< static_cast<int>(this->tipo) << '\n' << this->nombre <<'\n';
+		}
+
 };
 
 class Data

@@ -15,11 +15,11 @@ int main(int argc, char *argv[]) {
 	char trama[100];
 	char a=0x01;
 	
-	Data d;
+	Ack d;
 	d.setBloque(0x01);
 	trama[0]=d.getTipo();
 	trama[1]=d.getBloque();
-	cout <<trama << '\n';
+	cout <<trama<< '\n';
 
 	return 0;
 }

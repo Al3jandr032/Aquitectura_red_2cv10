@@ -66,6 +66,9 @@ class Ack
 		void setBloque(char i){
 			this->numero=i;
 		}
+		char getBloque(){
+			return this->numero;
+		}
 	private:
 		char tipo;
 		char numero;

@@ -1,6 +1,7 @@
 #include <iostream>
 #include <cstring>
 using namespace std;
+#define BLKSIZE 512
 class Solicitud
 {
 	private:

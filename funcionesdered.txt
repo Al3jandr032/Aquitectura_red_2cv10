@@ -1,0 +1,12 @@
+Buffer
+
+Numero de secuencia
+
+control de flujo (parada y espera)
+
+Control de error (parada y espera)
+
+Deteccion de errores (bit de paridad)
+
+direccionamiento
+

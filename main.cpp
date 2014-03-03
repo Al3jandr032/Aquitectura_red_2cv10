@@ -12,14 +12,14 @@ int main(int argc, char *argv[]) {
 	/*
 	Armar la trama instanciando el tipo de trama a enviar y  configurandola
 	*/
-	int i;
 	char trama[100];
-	char nombre[15]="hola";
-	Solicitud Rqe(1,nombre);
-	trama[0]=Rqe.getTipo();
-	trama[1]='\0';
-	strncat(trama, Rqe.getName(), 4);
-	cout << trama << '\n';
+	char a=0x01;
+	
+	Data d;
+	d.setBloque(0x01);
+	trama[0]=d.getTipo();
+	trama[1]=d.getBloque();
+	cout <<trama << '\n';
 
 	return 0;
 }

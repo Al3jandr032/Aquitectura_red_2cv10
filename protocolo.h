@@ -27,6 +27,11 @@ class Solicitud
 		}
 
 };
+/*
+char nombre[15]="hola";
+Solicitud Rqe(1,nombre);
+*/
+
 
 class Data
 {
@@ -37,8 +42,11 @@ class Data
 		char getTipo(){
 			return this->tipo;
 		}
-		void setBloque(int i){
+		void setBloque(char i){
 			this->bloque=i;
+		}
+		char getBloque(){
+			return this->bloque;
 		}
 	private:
 		char tipo;
@@ -55,7 +63,7 @@ class Ack
 		char getTipo(){
 			return this->tipo;
 		}
-		void setBloque(int i){
+		void setBloque(char i){
 			this->numero=i;
 		}
 	private:

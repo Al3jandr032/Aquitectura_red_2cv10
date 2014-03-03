@@ -1,6 +1,7 @@
 [Project]
-FileName=Project2.dev
-Name=Project2
+FileName=pruebacanal.dev
+Name=pruebacanal
+UnitCount=4
 Type=1
 Ver=2
 ObjFiles=
@@ -11,15 +12,13 @@ ResourceIncludes=
 MakeIncludes=
 Compiler=
 CppCompiler=
-Linker=
+Linker=libwsock32.a_@@_canalwinpcap.a_@@_libwpcap.a_@@_
 IsCpp=1
 Icon=
 ExeOutput=
 ObjectOutput=
-LogOutput=
-LogOutputEnabled=0
 OverrideOutput=0
-OverrideOutputName=
+OverrideOutputName=examen.exe
 HostApplication=
 Folders=
 CommandLine=
@@ -28,14 +27,15 @@ CustomMakefile=
 IncludeVersionInfo=0
 SupportXPThemes=0
 CompilerSet=0
-CompilerSettings=0000000000000000000000000
-UnitCount=4
+CompilerSettings=0000000000000000000000
+LogOutput=
+LogOutputEnabled=0
 
 [VersionInfo]
-Major=1
-Minor=0
-Release=0
-Build=0
+Major=0
+Minor=1
+Release=1
+Build=1
 LanguageID=1033
 CharsetID=1252
 CompanyName=
@@ -48,12 +48,12 @@ OriginalFilename=
 ProductName=
 ProductVersion=
 AutoIncBuildNr=0
-SyncProduct=1
+SyncProduct=0
 
 [Unit1]
 FileName=main.cpp
 CompileCpp=1
-Folder=
+Folder=pruebacanal
 Compile=1
 Link=1
 Priority=1000

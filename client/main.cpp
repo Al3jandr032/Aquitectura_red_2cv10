@@ -25,11 +25,17 @@ int main(int argc, char *argv[])
 	enviarData(trama);
 	terminar();
  */
- char a = 0x02;
- cout <<hex<< static_cast<int>(a)<< '\n';
- char b = a << 1;
- 	
- 	cout <<hex<< static_cast<int>(b)<< '\n';
+ int i,nunos=0;
+char a = 0xA7;
+char temp = a;
+for(i = 0; i < sizeof(char)*8;i++) {
+if (temp & 0x01) 
+nunos++;
+ 
+temp=temp >> 1;
+}
+
+cout << nunos;
     system("PAUSE");
     return EXIT_SUCCESS;
 }

@@ -1,8 +1,7 @@
 #include <iostream>
 #include <cstring>
-#include "transporte.h"
 using namespace std;
-
+#define BLKSIZE 512
 class Solicitud
 {
 	private:
@@ -112,92 +111,33 @@ class error
 	tipoRequest=err.getTipo();
 	cout << "valor "<< hex<< static_cast<int>(tipoRequest) << '\n';
 	*/
-class Adr
-{
-	public:
-		char dest;
-		char orig;
-		Adr(char orig,char dest){
-			this->orig=orig;
-			this->dest=dest;
-		}
-		char getOrig(){
-			return this->orig;
-		}
-		char getDest(){
-			return this->dest;
-		}
-};	
+	
 	
 /******************************************************************************/
+class Transfer
+{
+   public:
+      char tipo[];   
+      char archivo[];  
+      char modo[];   
+	private:
+		Solicitud trama;
+};
 
 void enviarAck(char *trama){
 	//byte para numerar los paquetes
 	char Bloque=0x01;
 	//instaancie del paquete datos
 	Ack acuse;
-	//instancia de direccion
-	Adr dir(0x01,0x02);
-	// agregar direcciones a la trama
-	trama[0]=dir.dest;
-	trama[1]=dir.orig;
-	trama[2]=acuse.getTipo();
+	// abrir el archivo en modo binario
+
+	
 	do{
 			acuse.setBloque(Bloque);
-			
-			trama[3]=acuse.getBloque();
-			tx(trama,4);
+			trama[0]=acuse.getTipo();
+			trama[1]=acuse.getBloque();
+			tx(trama,2);
 		Bloque++;
-	}while(Bloque >= 10);
+	}while(Bloque >= 0x0f);
 		
 }
-
-void enviarData(char *trama){
-	int con,length;
-	//buffer para leer del archivo
-	char buffer[5];
-	//byte para numerar los paquetes
-	char Bloque=0x01;
-	//instaancie del paquete datos
-	Data d;
-	//instancia de direccion
-	Adr dir(0x01,0x02);
-	// agregar direcciones a la trama
-	trama[0]=dir.dest;
-	trama[1]=dir.orig;
-	trama[2]=d.getTipo();
-	// abrir el archivo en modo binario
-	ifstream myFile ("laravel.txt", ios::in | ios::binary);
-	//longitud del archivo
-	myFile.seekg (0, myFile.end);
-    length = myFile.tellg();
-    myFile.seekg (0, myFile.beg);
-    con=length;
-	do{
-		if(con <= 5){
-			myFile.read(buffer, con);
-			d.setBloque(Bloque);
-			trama[3]=d.getBloque();
-			memcpy(trama+4,buffer,con);
-			tx(trama,con+4);
-		}
-		else{
-			myFile.read(buffer, 5);
-			d.setBloque(Bloque);
-			trama[3]=d.getBloque();
-			memcpy(trama+4,buffer,5);
-			tx(trama,9);
-		}
-		Bloque++;
-		con=con-5;
-	}while(con > 0);
-	
-}
-int parity(char x) {
-    int parity=0;
-    while (x > 0) {
-       parity = (parity + (x & 1)) % 2;
-       x >>= 1;
-    }
-}
-

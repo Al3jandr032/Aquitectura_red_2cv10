@@ -193,11 +193,15 @@ void enviarData(char *trama){
 	}while(con > 0);
 	
 }
-int parity(char x) {
-    int parity=0;
-    while (x > 0) {
-       parity = (parity + (x & 1)) % 2;
-       x >>= 1;
-    }
+int contarunos(char entrada){
+	 int i,nunos=0;
+	 //char temp = entrada;
+	for(i = 0; i < sizeof(char)*8;i++) {
+		if (entrada & 0x01) 
+		nunos++;
+	 
+		entrada=entrada >> 1;
+	}
+	return nunos;
 }
 

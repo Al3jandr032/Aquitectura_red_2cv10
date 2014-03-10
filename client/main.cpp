@@ -8,26 +8,28 @@
 #include <stdlib.h>
 #include "canal.h"
 #include "protocolo.h"
-
-
 using namespace std;
-
-
-
 
 int main(int argc, char *argv[])
 {
 	//Trama a transmitir
-	char trama[9];
-	//contador
-	/*	    
+	char trama[512];
+	
+	
+	char nombre[14]="laravel.txt";
+	
 	inicializar();
-	enviarAck(trama);
-	enviarData(trama);
+	//peticion de escritura
+	enviarPeticion(1,nombre,sizeof(nombre));
+	//peticion de lectura
+	enviarPeticion(2,nombre,sizeof(nombre));
+	//enviar data
+	enviarData(trama,nombre);
 	terminar();
- */
-	char a = 0xA7;
-	cout << contarunos(a);
+	
     system("PAUSE");
     return EXIT_SUCCESS;
 }
+
+
+

@@ -2,20 +2,24 @@
 #include <cstring>
 #include "transporte.h"
 using namespace std;
-
+/********************************************************************/
+/********************************************************************/
+/*******************      TRAMAS       *****************************/
+/********************************************************************/
+/********************************************************************/
 class Solicitud
 {
 	private:
 		char tipo;
 		char* nombre;
 	public:
-		Solicitud(int tipo,const char name[]){
+		Solicitud(int tipo){
 			if(tipo == 1){
 				this->tipo = 0x01;
-				strcpy(this->nombre, name);
+				//strcpy(this->nombre, name);
 			}else if(tipo == 2){
 				this->tipo = 0x02;
-				strcpy(this->nombre, name);
+				//strcpy(this->nombre, name);
 			}
 		}
 		char getTipo(){
@@ -29,11 +33,6 @@ class Solicitud
 		}
 
 };
-/*
-char nombre[15]="hola";
-Solicitud Rqe(1,nombre);
-*/
-
 
 class Data
 {
@@ -90,28 +89,11 @@ class error
 		char codigo;
 		char mensaje;
 };
+//------------------------------------------------------------------------------
 
-
-/*
-	Solicitud request(1);
-	Solicitud req(2);
-	char tipoRequest=request.getTipo();
-	cout << "valor "<< hex<< static_cast<int>(tipoRequest) << '\n';
-	tipoRequest=req.getTipo();
-	cout << "valor "<< hex<< static_cast<int>(tipoRequest) << '\n';
-	//DAtos
-	Data datos;
-	tipoRequest = datos.getTipo();
-	cout << "valor "<< hex<< static_cast<int>(tipoRequest) << '\n';
-	//Acuse
-	Ack acuse;
-	tipoRequest=acuse.getTipo();
-	cout << "valor "<< hex<< static_cast<int>(tipoRequest) << '\n';
-	//Error
-	error err;
-	tipoRequest=err.getTipo();
-	cout << "valor "<< hex<< static_cast<int>(tipoRequest) << '\n';
-	*/
+/********************************************************************/
+/*******************    DIRECCIONES     *****************************/
+/********************************************************************/
 class Adr
 {
 	public:
@@ -128,8 +110,38 @@ class Adr
 			return this->dest;
 		}
 };	
-	
-/******************************************************************************/
+//------------------------------------------------------------------------------
+
+/***************************************************************************/
+/*******************      BIT DE PARIDAD       *****************************/
+/***************************************************************************/
+
+int contarunos(char entrada){
+	 int i,nunos=0;
+	 //char temp = entrada;
+	for(i = 0; i < sizeof(char)*8;i++) {
+		if (entrada & 0x01) 
+		nunos++;
+	 
+		entrada=entrada >> 1;
+	}
+	return nunos;
+}
+
+int unostrama(char *trama){
+	int i , cont=0;
+	for(i = 0; i <sizeof(trama);i++){
+		cont = cont + contarunos(trama[i]);
+	}
+	return cont;
+}
+//------------------------------------------------------------------------------
+
+
+/********************************************************************/
+/*******************      ACUSES       *****************************/
+/********************************************************************/
+/*******************************************************************/
 
 void enviarAck(char *trama){
 	//byte para numerar los paquetes
@@ -144,15 +156,36 @@ void enviarAck(char *trama){
 	trama[2]=acuse.getTipo();
 	do{
 			acuse.setBloque(Bloque);
-			
 			trama[3]=acuse.getBloque();
+			cout << unostrama(trama)<<'\n';
 			tx(trama,4);
 		Bloque++;
 	}while(Bloque >= 10);
 		
 }
 
-void enviarData(char *trama){
+
+int waitforAck(char bloque){
+	char bufer[1500];
+	int tam=sizeof(bufer);
+	do{
+		rx(bufer,&tam);
+		if(bufer[0] == 0x02 && bufer[1] == 0x01 
+				&& bufer[2]== 0x08 && bufer[3]== bloque){
+			imprimir(bufer,tam);
+			continue;
+		}
+		
+	}while(1);
+	return 0;
+}
+//------------------------------------------------------------------------------
+
+/********************************************************************/
+/*******************      DATOS       *****************************/
+/********************************************************************/
+/********************************************************************/
+void enviarData(char *trama,char *nombre){
 	int con,length;
 	//buffer para leer del archivo
 	char buffer[5];
@@ -167,41 +200,82 @@ void enviarData(char *trama){
 	trama[1]=dir.orig;
 	trama[2]=d.getTipo();
 	// abrir el archivo en modo binario
-	ifstream myFile ("laravel.txt", ios::in | ios::binary);
+	ifstream myFile (nombre, ios::in | ios::binary);
 	//longitud del archivo
-	myFile.seekg (0, myFile.end);
-    length = myFile.tellg();
-    myFile.seekg (0, myFile.beg);
-    con=length;
+		myFile.seekg (0, myFile.end);
+    	length = myFile.tellg();
+    	myFile.seekg (0, myFile.beg);
+    	con=length;
 	do{
 		if(con <= 5){
 			myFile.read(buffer, con);
 			d.setBloque(Bloque);
 			trama[3]=d.getBloque();
 			memcpy(trama+4,buffer,con);
-			tx(trama,con+4);
+			if(unostrama(trama)%2==0){
+			trama[4+con]=0x00;	
+			}else{
+			trama[4+con]=0x01;	
+			}
+			tx(trama,con+5);
 		}
 		else{
 			myFile.read(buffer, 5);
 			d.setBloque(Bloque);
 			trama[3]=d.getBloque();
 			memcpy(trama+4,buffer,5);
-			tx(trama,9);
+			if(unostrama(trama)%2==0){
+			trama[9]=0x00;	
+			}else{
+			trama[9]=0x01;	
+			}
+			tx(trama,10);
 		}
+		system("PAUSE");
+		//waitforAck(Bloque);
 		Bloque++;
 		con=con-5;
 	}while(con > 0);
 	
 }
-int contarunos(char entrada){
-	 int i,nunos=0;
-	 //char temp = entrada;
-	for(i = 0; i < sizeof(char)*8;i++) {
-		if (entrada & 0x01) 
-		nunos++;
-	 
-		entrada=entrada >> 1;
+
+void recibirData(char *nombre){
+	char trama[10];
+	//byte para numerar los paquetes
+	char Bloque=0x01;
+	ofstream myFile;
+	myFile.open("file.dat", ios::out);
+	do{
+		rx(trama,10);
+		if(trama[2] == 0x04 && trama[2]==Bloque){
+		myFile.write(trama+4,5);
+		Bloque++;
+		}
+		
+	}while(sizeof(trama) < 10);
+	myFile.close();
+}
+//------------------------------------------------------------------------------
+/********************************************************************/
+/*******************      PETICIONES       *****************************/
+/********************************************************************/
+/********************************************************************/
+void enviarPeticion(int tipo, char *nombre,int size){
+	char trama[50];
+	Solicitud request(tipo);
+	//instancia de direccion
+	Adr dir(0x01,0x02);
+	// agregar direcciones a la trama
+	trama[0]=dir.dest;
+	trama[1]=dir.orig;
+	trama[2]=request.getTipo();
+	memcpy(trama+3,nombre,size); 
+	if(unostrama(trama)%2==0){
+			trama[15]=0x00;	
+	}else{
+			trama[15]=0x01;	
 	}
-	return nunos;
+	tx(trama,15);
 }
 
+/********************************************************************/

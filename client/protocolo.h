@@ -2,6 +2,8 @@
 #include <cstring>
 #include "transporte.h"
 using namespace std;
+
+#define Bloq_size 512
 /********************************************************************/
 /********************************************************************/
 /*******************      TRAMAS       *****************************/
@@ -137,46 +139,60 @@ int unostrama(char *trama){
 }
 //------------------------------------------------------------------------------
 
-
+/********************************************************************/
+void impr(unsigned char *bufer){
+   for(int i=0; i<60;i++)
+	{     
+		if(i%16==0)
+    	 printf("\n");
+     printf("%.2x ",bufer[i]);
+   }
+}
 /********************************************************************/
 /*******************      ACUSES       *****************************/
 /********************************************************************/
 /*******************************************************************/
 
-void enviarAck(char *trama){
-	//byte para numerar los paquetes
-	char Bloque=0x01;
+void enviarAck(char *trama,char Bloque,Adr dir){
+	
 	//instaancie del paquete datos
 	Ack acuse;
-	//instancia de direccion
-	Adr dir(0x01,0x02);
+	
 	// agregar direcciones a la trama
 	trama[0]=dir.dest;
 	trama[1]=dir.orig;
 	trama[2]=acuse.getTipo();
-	do{
-			acuse.setBloque(Bloque);
-			trama[3]=acuse.getBloque();
-			cout << unostrama(trama)<<'\n';
-			tx(trama,4);
-		Bloque++;
-	}while(Bloque >= 10);
+	acuse.setBloque(Bloque);
+	trama[3]=acuse.getBloque();
+	if(unostrama(trama)%2==0){
+		trama[4]=0x00;	
+	}else{
+		trama[4]=0x01;	
+	}
+		tx(trama,5);
 		
 }
 
 
-int waitforAck(char bloque){
+int waitforAck(char bloque,const char *dir){
 	char bufer[1500];
 	int tam=sizeof(bufer);
-	do{
-		rx(bufer,&tam);
-		if(bufer[0] == 0x02 && bufer[1] == 0x01 
-				&& bufer[2]== 0x08 && bufer[3]== bloque){
-			imprimir(bufer,tam);
-			continue;
-		}
+	leer:
 		
-	}while(1);
+	do{
+		tam=sizeof(bufer);                  
+		rx(bufer,&tam);
+		impr((unsigned char*)bufer);
+	}while(memcmp(bufer,dir,1));
+	printf("recv\n");
+	impr((unsigned char*)bufer);
+	if(!memcmp(bufer,dir,2))
+	{
+
+		//tx(trama,60);
+	}                                                  
+	else
+		goto leer;
 	return 0;
 }
 //------------------------------------------------------------------------------
@@ -188,7 +204,7 @@ int waitforAck(char bloque){
 void enviarData(char *trama,char *nombre){
 	int con,length;
 	//buffer para leer del archivo
-	char buffer[5];
+	char buffer[Bloq_size];
 	//byte para numerar los paquetes
 	char Bloque=0x01;
 	//instaancie del paquete datos
@@ -207,7 +223,8 @@ void enviarData(char *trama,char *nombre){
     	myFile.seekg (0, myFile.beg);
     	con=length;
 	do{
-		if(con <= 5){
+		
+		if(con <= Bloq_size){
 			myFile.read(buffer, con);
 			d.setBloque(Bloque);
 			trama[3]=d.getBloque();
@@ -217,42 +234,47 @@ void enviarData(char *trama,char *nombre){
 			}else{
 			trama[4+con]=0x01;	
 			}
-			tx(trama,con+5);
+			tx(trama,con+Bloq_size);
 		}
 		else{
-			myFile.read(buffer, 5);
+			myFile.read(buffer, Bloq_size);
 			d.setBloque(Bloque);
 			trama[3]=d.getBloque();
-			memcpy(trama+4,buffer,5);
+			memcpy(trama+4,buffer,Bloq_size);
 			if(unostrama(trama)%2==0){
 			trama[9]=0x00;	
 			}else{
 			trama[9]=0x01;	
 			}
-			tx(trama,10);
+			tx(trama,Bloq_size+5);
 		}
-		system("PAUSE");
+		//system("PAUSE");
 		//waitforAck(Bloque);
+		if(Bloque != 0xff){
 		Bloque++;
-		con=con-5;
+		}else{
+		Bloque = 0x00;
+		}
+		con=con-Bloq_size;
 	}while(con > 0);
 	
 }
 
 void recibirData(char *nombre){
-	char trama[10];
+	char trama[517];
 	//byte para numerar los paquetes
 	char Bloque=0x01;
+	int tam=sizeof(trama);
 	ofstream myFile;
-	myFile.open("file.dat", ios::out);
+	myFile.open("file.dat", ios::out| ios::binary);
 	do{
-		rx(trama,10);
+		rx(trama,&tam);
 		if(trama[2] == 0x04 && trama[2]==Bloque){
-		myFile.write(trama+4,5);
+		myFile.write(trama+4,512);
 		Bloque++;
 		}
 		
-	}while(sizeof(trama) < 10);
+	}while(sizeof(trama) < 512);
 	myFile.close();
 }
 //------------------------------------------------------------------------------
@@ -278,4 +300,4 @@ void enviarPeticion(int tipo, char *nombre,int size){
 	tx(trama,15);
 }
 
-/********************************************************************/
+

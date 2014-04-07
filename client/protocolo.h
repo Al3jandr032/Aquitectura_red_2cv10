@@ -173,28 +173,13 @@ void enviarAck(char *trama,char Bloque,Adr dir){
 		
 }
 
-
+/*
 int waitforAck(char bloque,const char *dir){
 	char bufer[1500];
 	int tam=sizeof(bufer);
-	leer:
-		
-	do{
-		tam=sizeof(bufer);                  
-		rx(bufer,&tam);
-		impr((unsigned char*)bufer);
-	}while(memcmp(bufer,dir,1));
-	printf("recv\n");
-	impr((unsigned char*)bufer);
-	if(!memcmp(bufer,dir,2))
-	{
-
-		//tx(trama,60);
-	}                                                  
-	else
-		goto leer;
+	
 	return 0;
-}
+}*/
 //------------------------------------------------------------------------------
 
 /********************************************************************/
@@ -202,7 +187,8 @@ int waitforAck(char bloque,const char *dir){
 /********************************************************************/
 /********************************************************************/
 void enviarData(char *trama,char *nombre){
-	int con,length;
+	int con,length,tam;
+	char bufer[1500];
 	//buffer para leer del archivo
 	char buffer[Bloq_size];
 	//byte para numerar los paquetes
@@ -211,6 +197,8 @@ void enviarData(char *trama,char *nombre){
 	Data d;
 	//instancia de direccion
 	Adr dir(0x01,0x02);
+	char dirorig[1] = {0x01};
+	char dirdest[1]={0x02};
 	// agregar direcciones a la trama
 	trama[0]=dir.dest;
 	trama[1]=dir.orig;
@@ -249,7 +237,16 @@ void enviarData(char *trama,char *nombre){
 			tx(trama,Bloq_size+5);
 		}
 		//system("PAUSE");
-		//waitforAck(Bloque);
+		leer:
+			printf("esperando acuse\n");
+			do{
+				tam=sizeof(bufer);                  
+				rx(bufer,&tam);
+				impr((unsigned char*)bufer);
+			}while(memcmp(bufer,dirorig,1));
+			printf("recv\n");
+			impr((unsigned char*)bufer);
+			
 		if(Bloque != 0xff){
 		Bloque++;
 		}else{
@@ -261,14 +258,18 @@ void enviarData(char *trama,char *nombre){
 }
 
 void recibirData(char *nombre){
-	char trama[517];
+	char trama[520];
+	char dirorig[1] = {0x01};
 	//byte para numerar los paquetes
 	char Bloque=0x01;
 	int tam=sizeof(trama);
 	ofstream myFile;
-	myFile.open("file.dat", ios::out| ios::binary);
+	myFile.open(nombre, ios::out| ios::binary);
 	do{
-		rx(trama,&tam);
+		do{                 
+			rx(trama,&tam);
+			impr((unsigned char*)trama);
+		}while(memcmp(trama,dirorig,1));
 		if(trama[2] == 0x04 && trama[2]==Bloque){
 		myFile.write(trama+4,512);
 		Bloque++;

@@ -4,6 +4,7 @@
 using namespace std;
 
 #define Bloq_size 512
+#define Dat_size 512+4
 /********************************************************************/
 /********************************************************************/
 /*******************      TRAMAS       *****************************/
@@ -186,19 +187,19 @@ int waitforAck(char bloque,const char *dir){
 /*******************      DATOS       *****************************/
 /********************************************************************/
 /********************************************************************/
-void enviarData(char *trama,char *nombre){
+void enviarData(char *trama,char *nombre,char Bloq,char org,char dest){
 	int con,length,tam;
 	char bufer[1500];
 	//buffer para leer del archivo
 	char buffer[Bloq_size];
 	//byte para numerar los paquetes
-	char Bloque=0x01;
+	char Bloque=Bloq;
+	//char para indicar el fin de la transmicion
+	//char fin=0xff;
 	//instaancie del paquete datos
 	Data d;
 	//instancia de direccion
-	Adr dir(0x01,0x02);
-	char dirorig[1] = {0x01};
-	char dirdest[1]={0x02};
+	Adr dir(org,dest);
 	// agregar direcciones a la trama
 	trama[0]=dir.dest;
 	trama[1]=dir.orig;
@@ -216,13 +217,15 @@ void enviarData(char *trama,char *nombre){
 			myFile.read(buffer, con);
 			d.setBloque(Bloque);
 			trama[3]=d.getBloque();
+			//memcpy(trama+4,&fin,1);
 			memcpy(trama+4,buffer,con);
 			if(unostrama(trama)%2==0){
 			trama[4+con]=0x00;	
 			}else{
 			trama[4+con]=0x01;	
 			}
-			tx(trama,con+Bloq_size);
+			trama[5+con]= 0xff;
+			tx(trama,con+6);
 		}
 		else{
 			myFile.read(buffer, Bloq_size);
@@ -230,9 +233,9 @@ void enviarData(char *trama,char *nombre){
 			trama[3]=d.getBloque();
 			memcpy(trama+4,buffer,Bloq_size);
 			if(unostrama(trama)%2==0){
-			trama[9]=0x00;	
+			trama[Dat_size]=0x00;	
 			}else{
-			trama[9]=0x01;	
+			trama[Dat_size]=0x01;	
 			}
 			tx(trama,Bloq_size+5);
 		}
@@ -242,10 +245,10 @@ void enviarData(char *trama,char *nombre){
 			do{
 				tam=sizeof(bufer);                  
 				rx(bufer,&tam);
-				impr((unsigned char*)bufer);
-			}while(memcmp(bufer,dirorig,1));
-			printf("recv\n");
-			impr((unsigned char*)bufer);
+				//impr((unsigned char*)bufer);
+			}while(memcmp(bufer,&org,1));
+			printf("recibido\n");
+			//impr((unsigned char*)bufer);
 			
 		if(Bloque != 0xff){
 		Bloque++;
@@ -254,14 +257,14 @@ void enviarData(char *trama,char *nombre){
 		}
 		con=con-Bloq_size;
 	}while(con > 0);
-	
+	myFile.close();
 }
 
-void recibirData(char *nombre){
+void recibirData(char *nombre,char Bloq){
 	char trama[520];
 	char dirorig[1] = {0x01};
 	//byte para numerar los paquetes
-	char Bloque=0x01;
+	char Bloque=Bloq;
 	int tam=sizeof(trama);
 	ofstream myFile;
 	myFile.open(nombre, ios::out| ios::binary);
@@ -298,7 +301,7 @@ void enviarPeticion(int tipo, char *nombre,int size){
 	}else{
 			trama[15]=0x01;	
 	}
-	tx(trama,15);
+	tx(trama,sizeof(nombre)+3);
 }
 
 

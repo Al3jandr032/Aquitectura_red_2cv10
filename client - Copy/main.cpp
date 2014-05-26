@@ -9,97 +9,59 @@
 #include "canal.h"
 #include "protocolo.h"
 using namespace std;
-void printgen(){
-	cout<< "enviar peticion" << '\n';
-	cout<< "esperar peticion" << '\n';
-	cout<< "salir	3" << '\n';
-}
-void printm(){
-		cout<< "peticion de escritura	1" << '\n';
-		cout<< "peticion de lectura	2" << '\n';
-		cout<< "salir	3" << '\n';
-}
+
+
 int main(int argc, char *argv[])
 {
-	//Trama a transmitir
 	char trama[512];
-	//Nombre del archivo
-	char nombre[14]="song.mp3";
-	//byte para numerar los paquetes
-	char Bloque;
-	//instancia de direccion
-	Adr dir(0x02,0x01);
-	char orgin[]={0x02};
-	//opcion del menu
-	int op,ch,tam=sizeof(trama);
+	char Bloque=0x01;
+	char nombre[14]="laravel.txt";
+	char dirorig = {0x02};
+	char dirdest ={0x01};
+	int tam,con=0,recv;
+	char bufer[519];
+	Adr dir(dirorig,dirdest);
+	ofstream myFile;
+	
 	inicializar();
+	leer:
+	con++;
+	memset(&bufer, 0x03 , sizeof(bufer));
 	do{
-		printgen();
-		cin >> ch;
-		switch (ch)
-		{
-		case 1:
-		   		do{
-		
-						printm();
-						cin >> op;
-						switch (op)
-						{
-						case 1:
-						   //cin >> nombre;
-							//peticion de escritura
-							enviarPeticion(1,nombre,sizeof(nombre),dir);
-							//waitforAck(0x00);
-							cout<< "enviando ..."<< nombre << '\n';
-							enviarData(trama,nombre,dir);
-						   break;
-						case 2:
-							cin >> nombre;
-							//peticion de escritura
-							enviarPeticion(2,nombre,sizeof(nombre),dir);
-							//waitforAck(0x00);
-							cout<< "recibiendo ..."<< nombre << '\n';
-							recibirData(nombre,dir);
-						   break;
-						case 3:
-						   continue;
-						   break;
-						default:
-						   cout<< "valor invalido"<< '\n';
-						}
-					}while(op != 3);
-		   break;
-		case 2:
-			do{                 
-				rx(trama,&tam);
-			}while(memcmp(trama,orgin,1));
-			printf("recv\n");
-			if(trama[3] == 0x01 ){
-				printf("hiol");
-				impr((unsigned char*)trama);
-				//recibirData(nombre);
-			}else if(trama[3] == 0x02){
-				printf("hiol");
-				//enviarData(trama,nombre);
-				impr((unsigned char*)trama);
-			}
-			
-		   break;
-		case 3:
-		   return EXIT_SUCCESS;
-		   break;
-		default:
-		   cout<< "valor invalido"<< '\n';
-		}
-	}while(ch != 3);
+		tam=sizeof(bufer);                  
+		rx(bufer,&tam);
+		//impr((unsigned char*)bufer);
+	}while(memcmp(bufer,&dirorig,1));
+	//impr((unsigned char*)bufer);
+	if( bufer[517] == 0x03 && bufer[2] == 0x04 ){
+		recv=impr((unsigned char*)bufer);
+		printf("\n %d",recv);
+		recv= recv -5;
+		printf("\n %d",recv);		
+		enviarAck(trama,Bloque,dir);
+		myFile.write(bufer+ 4,recv);
+		terminar();
+		goto reel;
+	}
+	if(bufer[2] == 0x01  ){
+		enviarAck(trama,0x00,dir);
+		myFile.open(nombre, ios::out| ios::binary);
+		printf("reciviendo \n");
+		goto leer;
+	}
+	if(bufer[2] == 0x04){
+		impr((unsigned char*)bufer);
+		enviarAck(bufer,Bloque,dir);
+		myFile.write(trama+4,512);
+		Bloque++;
+		//printf("\n%X\n ",bufer[517]);
+		goto leer;
+	}
 	
-	terminar();
-	//enviar data
-	//enviarData(trama,nombre);
-	
-	
-    system("PAUSE");
-    return EXIT_SUCCESS;
+	reel:
+		myFile.close();
+		printf("\n done ..");
+	   return EXIT_SUCCESS;
 }
 
 

@@ -1,0 +1,9 @@
+# Project: Project1
+# Makefile created by Dev-C++ 5.3.0.3
+
+CPP      = g++.exe
+CC       = gcc.exe
+WINDRES  = windres.exe
+OBJ      = GitHub/Aquitectura_red_2cv10/lib/WpdPack/Examples-pcap/pktdump_ex/pktdump_ex.o $(RES)
+LINKOBJ  = GitHub/Aquitectura_red_2cv10/lib/WpdPack/Examples-pcap/pktdump_ex/pktdump_ex.o $(RES)
+

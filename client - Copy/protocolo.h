@@ -3,7 +3,7 @@
 #include "transporte.h"
 using namespace std;
 
-#define Bloq_size 512
+#define Bloq_size 12
 /********************************************************************/
 /********************************************************************/
 /*******************      TRAMAS       *****************************/
@@ -140,14 +140,20 @@ int unostrama(char *trama){
 //------------------------------------------------------------------------------
 
 /********************************************************************/
-void impr(unsigned char *bufer){
-   for(int i=0; i<60;i++)
+int impr(unsigned char *bufer){
+	int c;
+   for(int i=0; i<330;i++)
 	{     
 		if(i%16==0)
     	 printf("\n");
+    	if(bufer[i] == 0xff)
+    	 c=i;
      printf("%.2x ",bufer[i]);
    }
+   return c;
 }
+
+
 /********************************************************************/
 /*******************      ACUSES       *****************************/
 /********************************************************************/
@@ -186,20 +192,19 @@ int waitforAck(char bloque,const char *dir){
 /*******************      DATOS       *****************************/
 /********************************************************************/
 /********************************************************************/
-void enviarData(char *trama,char *nombre,Adr dir){
+void enviarData(char *trama,char *nombre,char Bloq){
 	int con,length,tam;
 	char bufer[1500];
 	//buffer para leer del archivo
 	char buffer[Bloq_size];
 	//byte para numerar los paquetes
-	char Bloque=0x01;
+	char Bloque=Bloq;
 	//instaancie del paquete datos
 	Data d;
 	//instancia de direccion
-	char dirorig[1];
-	char dirdest[1];
-	dirorig[0] = dir.orig;
-	dirdest[0]=dir.dest;
+	Adr dir(0x01,0x02);
+	char dirorig[1] = {0x01};
+	char dirdest[1]={0x02};
 	// agregar direcciones a la trama
 	trama[0]=dir.dest;
 	trama[1]=dir.orig;
@@ -258,12 +263,11 @@ void enviarData(char *trama,char *nombre,Adr dir){
 	
 }
 
-void recibirData(char *nombre,Adr dir){
+void recibirData(char *nombre,char Bloq){
 	char trama[520];
-	char dirorig[1];
-	dirorig[0] = dir.orig;
+	char dirorig[1] = {0x01};
 	//byte para numerar los paquetes
-	char Bloque=0x01;
+	char Bloque=Bloq;
 	int tam=sizeof(trama);
 	ofstream myFile;
 	myFile.open(nombre, ios::out| ios::binary);
@@ -285,11 +289,11 @@ void recibirData(char *nombre,Adr dir){
 /*******************      PETICIONES       *****************************/
 /********************************************************************/
 /********************************************************************/
-void enviarPeticion(int tipo, char *nombre,int size,Adr dir){
+void enviarPeticion(int tipo, char *nombre,int size,char org,char dest){
 	char trama[50];
 	Solicitud request(tipo);
 	//instancia de direccion
-	
+	Adr dir(org,dest);
 	// agregar direcciones a la trama
 	trama[0]=dir.dest;
 	trama[1]=dir.orig;
